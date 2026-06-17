@@ -4,12 +4,6 @@ This guide explains how to integrate the **PoilabsAnalysis** SDK into a Flutter
 application on both **iOS** and **Android**, and how to drive it from Dart over
 platform channels.
 
-> **Credentials are never hard-coded.** Your `APPLICATION_ID`,
-> `APPLICATION_SECRET`, `UNIQUE_ID` and the **JITPACK_TOKEN** are provided by
-> PoiLabs and must be kept out of version control. The steps below read them from
-> git-ignored configuration files (`local.properties` on Android, an `.xcconfig`
-> on iOS) so they never end up in the repository.
-
 **Quick setup** — copy the example files and fill in your values:
 
 ```bash
