@@ -1,0 +1,20 @@
+import '../../../core/platform/poi_analysis_platform.dart';
+import '../domain/models/analysis_event.dart';
+
+class AnalysisRepository {
+  AnalysisRepository(this._platform);
+
+  final PoiAnalysisPlatform _platform;
+
+  Stream<AnalysisEvent> watchEvents() => _platform.events;
+
+  Future<String> getPlatform() => _platform.getPlatform();
+
+  Future<String> getSdkVersion() => _platform.getSdkVersion();
+
+  Future<void> requestPermissions() => _platform.requestPermissions();
+
+  Future<void> startScan() => _platform.startScan();
+
+  Future<void> stopScan() => _platform.stopScan();
+}
