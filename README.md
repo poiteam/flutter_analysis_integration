@@ -4,13 +4,6 @@ This guide explains how to integrate the **PoilabsAnalysis** SDK into a Flutter
 application on both **iOS** and **Android**, and how to drive it from Dart over
 platform channels.
 
-**Quick setup** — copy the example files and fill in your values:
-
-```bash
-cp android/local.properties.example android/local.properties
-cp ios/Flutter/Secrets.xcconfig.example ios/Flutter/Secrets.xcconfig
-```
-
 ---
 
 ## iOS
