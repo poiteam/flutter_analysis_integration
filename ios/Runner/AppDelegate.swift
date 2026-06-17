@@ -12,9 +12,17 @@ private let eventChannelName = "com.poilabs.analysis/poi_events"
   private var isMonitoring = false
   private let locationManager = CLLocationManager()
 
-  private let appId = "1f2fbfc6-8921-4814-82ba-1ce01b06f5d5"
-  private let secretId = "095432d9-3912-4349-a8b1-7f93b60874b2"
-  private let uniqueId = "emre_test"
+  private var appId: String {
+    Bundle.main.object(forInfoDictionaryKey: "POIAppId") as? String ?? ""
+  }
+
+  private var applicationSecret: String {
+    Bundle.main.object(forInfoDictionaryKey: "POIAppSecret") as? String ?? ""
+  }
+
+  private var uniqueId: String {
+    Bundle.main.object(forInfoDictionaryKey: "POIUniqueId") as? String ?? ""
+  }
 
   override func application(
     _ application: UIApplication,
@@ -85,7 +93,7 @@ private let eventChannelName = "com.poilabs.analysis/poi_events"
   private func startMonitoring() {
     let settings = PLAnalysisSettings.sharedInstance()
     settings?.applicationId = appId
-    settings?.applicationSecret = secretId
+    settings?.applicationSecret = applicationSecret
     settings?.analysisUniqueIdentifier = uniqueId
 
     PLConfigManager.sharedInstance().getReadyForTracking(completionHandler: { [weak self] error in

@@ -14,7 +14,11 @@ class PoiAnalysisApplication : Application() {
 
     private fun initializeSdk() {
         try {
-            val config = PoiAnalysisConfig(APP_ID, SECRET_ID, UNIQUE_ID)
+            val config = PoiAnalysisConfig(
+                BuildConfig.POI_APP_ID,
+                BuildConfig.POI_APP_SECRET,
+                BuildConfig.POI_UNIQUE_ID,
+            )
             config.setEnabled(true)
             config.setOpenSystemBluetooth(false)
             config.setForegroundServiceIntent(
@@ -31,11 +35,5 @@ class PoiAnalysisApplication : Application() {
         } catch (exception: Exception) {
             exception.printStackTrace()
         }
-    }
-
-    companion object {
-        const val APP_ID = "d0ba2050-8754-4776-8c62-7a93dcba0da2"
-        const val SECRET_ID = "b7cfb418-8211-4773-ae1a-97ec308165ce"
-        const val UNIQUE_ID = "android_config_timer_test"
     }
 }

@@ -32,7 +32,7 @@ target 'Runner' do
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
-  pod 'PoilabsAnalysis', :path => '../../../Poi Ios Project/ios-analysis/PoilabsAnalysis'
+  pod 'PoilabsAnalysis', '3.8.13'
 end
 
 post_install do |installer|

@@ -1,0 +1,14 @@
+# Copy this file to local.properties and fill in your values.
+# local.properties is git-ignored and must not be committed.
+#
+# Flutter SDK path (added automatically by Android Studio / flutter run):
+# sdk.dir=/path/to/Android/sdk
+# flutter.sdk=/path/to/flutter
+
+# JitPack token provided by Poilabs
+jitpackToken=YOUR_JITPACK_TOKEN
+
+# Poilabs Analysis credentials provided by Poilabs
+poiAppId=YOUR_APPLICATION_ID
+poiAppSecret=YOUR_APPLICATION_SECRET
+poiUniqueId=YOUR_UNIQUE_ID

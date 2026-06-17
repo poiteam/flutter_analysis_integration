@@ -6,6 +6,12 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>Poilabs Analysis</string>
+	<key>POIAppId</key>
+	<string>$(POI_APP_ID)</string>
+	<key>POIAppSecret</key>
+	<string>$(POI_APP_SECRET)</string>
+	<key>POIUniqueId</key>
+	<string>$(POI_UNIQUE_ID)</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Beacon analysis requires always-on location access.</string>
 	<key>NSLocationAlwaysUsageDescription</key>

@@ -10,6 +10,13 @@ platform channels.
 > git-ignored configuration files (`local.properties` on Android, an `.xcconfig`
 > on iOS) so they never end up in the repository.
 
+**Quick setup** — copy the example files and fill in your values:
+
+```bash
+cp android/local.properties.example android/local.properties
+cp ios/Flutter/Secrets.xcconfig.example ios/Flutter/Secrets.xcconfig
+```
+
 ---
 
 ## iOS
@@ -20,7 +27,7 @@ To integrate PoilabsAnalysis into your Flutter iOS project using CocoaPods, add
 it to your `ios/Podfile`:
 
 ```ruby
-pod 'PoilabsAnalysis'
+pod 'PoilabsAnalysis', '3.8.13'
 ```
 
 **SDK Version:** `3.8.13`

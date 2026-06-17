@@ -1,3 +1,12 @@
+val jitpackToken: String = run {
+    val props = java.util.Properties()
+    val file = rootProject.file("local.properties")
+    if (file.exists()) {
+        file.inputStream().use { props.load(it) }
+    }
+    props.getProperty("jitpackToken") ?: ""
+}
+
 allprojects {
     repositories {
         google()
@@ -5,7 +14,7 @@ allprojects {
         maven {
             url = uri("https://jitpack.io")
             credentials {
-                username = "jp_rqqqj7aosvrlgngq90ptakqqua"
+                username = jitpackToken
             }
         }
     }
