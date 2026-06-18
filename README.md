@@ -154,12 +154,10 @@ allprojects {
 ```kotlin
 dependencies {
     implementation("com.github.poiteam:Android-Analysis-SDK:v3.11.6")
-    implementation("androidx.multidex:multidex:2.0.1")
-    implementation("androidx.work:work-runtime-ktx:2.9.0")
 }
 ```
 
-3. Enable multi dex in your android project  
+3. Enable multi dex in your android project (`multiDexEnabled = true` in `defaultConfig`)  
    https://developer.android.com/studio/build/multidex
 
 4. Minimum requirements
