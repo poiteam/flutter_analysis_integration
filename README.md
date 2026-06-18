@@ -17,10 +17,10 @@ PoiLabs Analysis SDK is a data analysis library. It provides data for analysing 
 To integrate PoilabsAnalysis into your Flutter iOS project using CocoaPods, specify it in your `Podfile`:
 
 ```ruby
-pod 'PoilabsAnalysis', '3.8.13'
+pod 'PoilabsAnalysis', '3.8.28'
 ```
 
-**SDK Version:** `3.8.13`
+**SDK Version:** `3.8.28`
 
 Then run:
 

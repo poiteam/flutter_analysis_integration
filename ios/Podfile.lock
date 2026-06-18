@@ -1,10 +1,10 @@
 PODS:
   - Flutter (1.0.0)
-  - PoilabsAnalysis (3.8.13)
+  - PoilabsAnalysis (3.8.28)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - PoilabsAnalysis (= 3.8.13)
+  - PoilabsAnalysis (= 3.8.28)
 
 SPEC REPOS:
   trunk:
@@ -16,8 +16,8 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  PoilabsAnalysis: 10a03502aebff3615269e73b27d01255a28a0a78
+  PoilabsAnalysis: 5dc139128c7395b93821bbd1835ecd796f4d650b
 
-PODFILE CHECKSUM: abc03ac600d967a45990ba192ecf2e00b048736f
+PODFILE CHECKSUM: d6758b3e22f3537bd0e81fefc4d8ff303aea8f0a
 
 COCOAPODS: 1.16.2
