@@ -30,9 +30,9 @@ private let eventChannelName = "com.poilabs.analysis/poi_events"
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
 
-    if launchOptions?[.location] != nil,
-       UIApplication.shared.applicationState == .background {
-      PLSuspendedAnalysisManager.sharedInstance().startBeaconMonitoring()
+    if launchOptions?[UIApplication.LaunchOptionsKey.location] != nil,
+       application.applicationState == .background {
+      PLSuspendedAnalysisManager.sharedInstance()?.startBeaconMonitoring()
     }
 
     if let controller = window?.rootViewController as? FlutterViewController {
@@ -44,6 +44,7 @@ private let eventChannelName = "com.poilabs.analysis/poi_events"
 
   override func applicationDidBecomeActive(_ application: UIApplication) {
     super.applicationDidBecomeActive(application)
+    startMonitoring()
   }
 
   private func setupChannels(controller: FlutterViewController) {
@@ -108,9 +109,9 @@ private let eventChannelName = "com.poilabs.analysis/poi_events"
           return
         }
 
-        PLSuspendedAnalysisManager.sharedInstance().stopBeaconMonitoring()
-        PLStandardAnalysisManager.sharedInstance().startBeaconMonitoring()
-        PLStandardAnalysisManager.sharedInstance().delegate = self
+        PLSuspendedAnalysisManager.sharedInstance()?.stopBeaconMonitoring()
+        PLStandardAnalysisManager.sharedInstance()?.startBeaconMonitoring()
+        PLStandardAnalysisManager.sharedInstance()?.delegate = self
         self.isMonitoring = true
         self.emitEvent([
           "type": "status",
@@ -121,7 +122,7 @@ private let eventChannelName = "com.poilabs.analysis/poi_events"
   }
 
   private func stopMonitoring() {
-    PLStandardAnalysisManager.sharedInstance().stopBeaconMonitoring()
+    PLStandardAnalysisManager.sharedInstance()?.stopBeaconMonitoring()
     PLAnalysisSettings.sharedInstance()?.closeAllActions()
     isMonitoring = false
     emitEvent([
