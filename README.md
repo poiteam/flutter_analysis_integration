@@ -1,8 +1,18 @@
 # PoilabsAnalysis Flutter Integration
 
+PoiLabs Analysis SDK is a data analysis library. It provides data for analysing POI Beacons data.
+
+- [iOS](#ios)
+- [Android](#android)
+- [Flutter](#flutter)
+
+---
+
 ## iOS
 
 ### INSTALLATION
+
+#### CocoaPods
 
 To integrate PoilabsAnalysis into your Flutter iOS project using CocoaPods, specify it in your `Podfile`:
 
@@ -18,9 +28,15 @@ Then run:
 cd ios && pod install
 ```
 
+#### Manually
+
+You can add `PoilabsAnalysis.xcframework` to **Frameworks, Libraries, and Embedded Content** in your project's General tab.
+
 ### PRE-REQUIREMENTS
 
 To integrate this framework you should add some features to your project `Info.plist` file.
+
+#### Location Permission
 
 Privacy - Location When In Use Usage Description
 
@@ -28,7 +44,9 @@ Privacy - Location Always Usage Description
 
 Privacy - Location Always and When In Use Usage Description
 
-Add the following values under `UIBackgroundModes`:
+#### Required Background Modes
+
+Add **Location updates** and **Uses Bluetooth LE accessories** background modes (or add under `UIBackgroundModes`):
 
 ```xml
 <key>UIBackgroundModes</key>
@@ -40,11 +58,13 @@ Add the following values under `UIBackgroundModes`:
 
 ### USAGE
 
-Bridge the native SDK to Flutter from `ios/Runner/AppDelegate.swift`. Set your
-`APPLICATION_ID`, `APPLICATION_SECRET_KEY` and `UNIQUE_ID` where it fits your
-app.
+Import the framework in `ios/Runner/AppDelegate.swift`:
 
-Start monitoring:
+```swift
+import PoilabsAnalysis
+```
+
+In `startMonitoring` (or `applicationDidBecomeActive`) activate the framework:
 
 ```swift
 PLAnalysisSettings.sharedInstance()?.applicationId = APPLICATION_ID
@@ -60,14 +80,24 @@ PLConfigManager.sharedInstance().getReadyForTracking(completionHandler: { error 
 })
 ```
 
-Stop monitoring:
+#### For background tracking
+
+In `didFinishLaunchingWithOptions`:
 
 ```swift
-PLStandardAnalysisManager.sharedInstance().stopBeaconMonitoring()
+if launchOptions?[.location] != nil,
+   UIApplication.shared.applicationState == .background {
+    PLSuspendedAnalysisManager.sharedInstance().startBeaconMonitoring()
+}
+```
+
+#### Close All Actions
+
+```swift
 PLAnalysisSettings.sharedInstance()?.closeAllActions()
 ```
 
-**PLAnalysisManagerDelegate**
+#### PLAnalysisManagerDelegate
 
 ```swift
 func analysisManagerDidFail(withPoiError error: PLError!) { }
@@ -75,18 +105,23 @@ func analysisManagerDidFail(withPoiError error: PLError!) { }
 func analysisManagerResponse(forBeaconMonitoring response: [AnyHashable: Any]!) { }
 ```
 
-To start suspended mode that allows track location when application is killed,
-call the method below in `didFinishLaunchingWithOptions`:
+#### Flutter bridge (`AppDelegate.swift`)
+
+Register **MethodChannel** and **EventChannel**, call the SDK methods above from the channel handler, and forward delegate callbacks to Flutter:
 
 ```swift
-if launchOptions?[.location] != nil,
-   UIApplication.shared.applicationState == .background {
-  PLSuspendedAnalysisManager.sharedInstance().startBeaconMonitoring()
-}
+private let methodChannelName = "com.poilabs.analysis/poi_analysis"
+private let eventChannelName = "com.poilabs.analysis/poi_events"
+
+// MethodChannel: requestPermissions, startScan, stopScan
+// EventChannel: forward nodeIds / errors from PLAnalysisManagerDelegate
 ```
 
-Expose start/stop and delegate callbacks to Flutter with **MethodChannel** and
-**EventChannel**. See the sample `AppDelegate.swift` in this repository.
+See `ios/Runner/AppDelegate.swift` in this repository for the full implementation.
+
+### TESTING
+
+You can only test PoilabsAnalysis SDK with a real device. For beacon ranging, run on an iPhone.
 
 ---
 
@@ -104,6 +139,8 @@ You can download our SDK via Gradle with following below steps.
 ```kotlin
 allprojects {
     repositories {
+        google()
+        mavenCentral()
         maven {
             url = uri("https://jitpack.io")
             credentials { username = "JITPACK_TOKEN" }
@@ -125,11 +162,17 @@ dependencies {
 3. Enable multi dex in your android project  
    https://developer.android.com/studio/build/multidex
 
+4. Minimum requirements
+
+| Supported Minimum Android |
+| --- |
+| Android 4.3 (API level 18) |
+
 ### PRE-REQUIREMENTS
 
 In order to our SDK can work properly we need location permission and bluetooth usage for scanning for beacons.
 
-**Android Manifest file**
+1. **Android Manifest file**
 
 ```xml
 <uses-permission android:name="android.permission.BLUETOOTH" />
@@ -149,6 +192,8 @@ Register your custom Application class:
 <application android:name=".PoiAnalysisApplication" ...>
 ```
 
+2. Request runtime permissions before starting scan. See `MainActivity.kt` in this repository for a sample permission flow.
+
 **Note:** It does not affect the SDK how you request runtime permissions. The samples in documentation are just samples. Feel free to get permissions however you want.
 
 ### USAGE
@@ -157,8 +202,7 @@ After getting permissions you can now use PoiLabs Analysis SDK.
 
 #### PoiAnalysisConfig
 
-Provide your configuration settings for SDK to work. Constructor takes
-`APPLICATION_ID`, `APPLICATION_SECRET_KEY`, `UNIQUE_ID` and they are mandatory.
+Constructor takes `APPLICATION_ID`, `APPLICATION_SECRET_KEY`, `UNIQUE_ID` and they are mandatory.
 
 ```kotlin
 val poiAnalysisConfig = PoiAnalysisConfig("APPLICATION_ID", "APPLICATION_SECRET_KEY", "UNIQUE_ID")
@@ -192,13 +236,13 @@ poiAnalysisConfig.enableForegroundService()
 **setServiceNotificationTitle(String)**
 
 ```kotlin
-poiAnalysisConfig.setServiceNotificationTitle("Searching for campaigns...")
+poiAnalysisConfig.setServiceNotificationTitle(FORE_GROUND_SERVICE_NOTIFICATION_TITLE)
 ```
 
 **setForegroundServiceNotificationChannelProperties(String, String)**
 
 ```kotlin
-poiAnalysisConfig.setForegroundServiceNotificationChannelProperties("Channel Name", "Channel Description")
+poiAnalysisConfig.setForegroundServiceNotificationChannelProperties(CHANNEL_NAME, CHANNEL_DESCRIPTION)
 ```
 
 **setForegroundServiceNotificationIconResourceId(Int)**
@@ -207,8 +251,7 @@ poiAnalysisConfig.setForegroundServiceNotificationChannelProperties("Channel Nam
 poiAnalysisConfig.setForegroundServiceNotificationIconResourceId(R.drawable.ic_notification)
 ```
 
-Initialize in your **Application** class `onCreate()` — first access to
-`PoiAnalysis.getInstance()` must happen here:
+Initialize in your **Application** class `onCreate()` — first access to `PoiAnalysis.getInstance()` must happen here:
 
 ```kotlin
 PoiAnalysis.getInstance(this, poiAnalysisConfig)
@@ -217,7 +260,7 @@ PoiAnalysis.getInstance().enable()
 
 #### PoiAnalysis
 
-For callbacks from SDK implement **PoiResponseCallback**:
+For callbacks implement **PoiResponseCallback**:
 
 1. `onResponse(nodeIds: List<String>)` — node ids of detected beacons  
 2. `onFail(cause: Exception)` — error from SDK
@@ -241,20 +284,66 @@ PoiAnalysis.getInstance().stopScan()
 
 #### Update Unique Id
 
-After user login, update the unique id for better classification:
-
 ```kotlin
 PoiAnalysis.getInstance().updateUniqueId(NEW_UNIQUE_ID)
 ```
 
-Bridge start/stop and `PoiResponseCallback` to Flutter with **MethodChannel** and
-**EventChannel** from `MainActivity`. See the sample files in this repository.
+#### Flutter bridge
+
+**`PoiAnalysisApplication.kt`** — SDK init (see above).
+
+**`MainActivity.kt`** — register channels and forward SDK callbacks:
+
+```kotlin
+MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.poilabs.analysis/poi_analysis")
+    .setMethodCallHandler { call, result ->
+        when (call.method) {
+            "requestPermissions" -> { /* ... */ result.success(true) }
+            "startScan" -> { /* PoiAnalysis.getInstance().startScan(...) */ result.success(true) }
+            "stopScan" -> { /* PoiAnalysis.getInstance().stopScan() */ result.success(true) }
+            else -> result.notImplemented()
+        }
+    }
+
+// EventChannel: send nodeIds from onResponse / errors from onFail
+```
+
+See `android/app/src/main/kotlin/.../MainActivity.kt` in this repository for the full implementation.
+
+### Proguard Rules
+
+```
+-keep public class getpoi.com.poibeaconsdk.PoiAnalysis
+-keep public interface getpoi.com.poibeaconsdk.models.BeaconScanCallback
+-keep public interface getpoi.com.poibeaconsdk.models.PoiResponseCallback
+-keep class getpoi.com.poibeaconsdk.PoiScanner* { *; }
+-keep class getpoi.com.poibeaconsdk.models.** { *; }
+-keep class getpoi.com.poibeaconsdk.models.PoiAnalysisConfig { *; }
+-dontwarn getpoi.com.poibeaconsdk.**
+-dontwarn com.poilabs.poiutil.**
+```
+
+### F.A.Q
+
+**Why am I getting `failed to resolve` error in Gradle?**  
+Check that the JitPack token is correct. Common codes: 401 (no token), 403 (no access), 404 (wrong version/tag).
+
+**Will my app crash if user rejects permissions?**  
+No. If permissions are not granted the SDK waits and works on the next session once permissions are granted.
+
+**Which permissions does the app need?**
+
+- Location Permission (Precise location)
+- Background Location Permission
+- BLUETOOTH_SCAN Permission
+- BLUETOOTH_CONNECT Permission (if you auto-enable bluetooth)
+- Push notification Permission (if you enable foreground scan)
 
 ---
 
 ## Flutter
 
-Import platform channels:
+Call the native SDK from Dart over platform channels.
 
 ```dart
 import 'package:flutter/services.dart';
@@ -276,7 +365,7 @@ Stop scanning:
 await _methodChannel.invokeMethod('stopScan');
 ```
 
-Listen for SDK responses (node ids, errors):
+Listen for node ids:
 
 ```dart
 _eventChannel.receiveBroadcastStream().listen((event) {
@@ -288,7 +377,7 @@ _eventChannel.receiveBroadcastStream().listen((event) {
 });
 ```
 
-Channel names used in the sample app:
+Channel names:
 
 - MethodChannel: `com.poilabs.analysis/poi_analysis`
 - EventChannel: `com.poilabs.analysis/poi_events`
