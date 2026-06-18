@@ -46,43 +46,11 @@ Add the following values under `UIBackgroundModes`:
 </array>
 ```
 
-### CREDENTIALS (keep them out of source control)
-
-Do **not** write your application id / secret directly into `AppDelegate.swift`.
-Store them in a git-ignored xcconfig file and surface them through `Info.plist`.
-
-1. Create `ios/Flutter/Secrets.xcconfig` and add it to your `.gitignore`:
-
-```
-POI_APP_ID = your-application-id
-POI_APP_SECRET = your-application-secret
-POI_UNIQUE_ID = your-unique-id
-```
-
-2. Include it from your existing `ios/Flutter/Debug.xcconfig` and
-   `ios/Flutter/Release.xcconfig`:
-
-```
-#include "Secrets.xcconfig"
-```
-
-3. Expose the values to the app in `ios/Runner/Info.plist`:
-
-```xml
-<key>POIAppId</key>
-<string>$(POI_APP_ID)</string>
-<key>POIAppSecret</key>
-<string>$(POI_APP_SECRET)</string>
-<key>POIUniqueId</key>
-<string>$(POI_UNIQUE_ID)</string>
-```
-
-They are then read at runtime with `Bundle.main.object(forInfoDictionaryKey:)`
-(see below), so no secret ever lives in committed Swift code.
-
 ### USAGE
 
 Update your `ios/Runner/AppDelegate.swift` to bridge the native SDK to Flutter.
+Set your Poilabs credentials where it fits your app (constants below, a config
+file, environment variables, etc.).
 
 ```swift
 import Flutter
@@ -98,17 +66,9 @@ private let eventChannelName = "com.poilabs.analysis/poi_events"
   private var eventSink: FlutterEventSink?
   private let locationManager = CLLocationManager()
 
-  // Credentials are read from Info.plist (populated from Secrets.xcconfig),
-  // never hard-coded here.
-  private var appId: String {
-    Bundle.main.object(forInfoDictionaryKey: "POIAppId") as? String ?? ""
-  }
-  private var applicationSecret: String {
-    Bundle.main.object(forInfoDictionaryKey: "POIAppSecret") as? String ?? ""
-  }
-  private var uniqueId: String {
-    Bundle.main.object(forInfoDictionaryKey: "POIUniqueId") as? String ?? ""
-  }
+  private let appId = "YOUR_APPLICATION_ID"
+  private let applicationSecret = "YOUR_APPLICATION_SECRET"
+  private let uniqueId = "YOUR_UNIQUE_ID"
 
   override func application(
     _ application: UIApplication,
@@ -254,20 +214,11 @@ You can download our SDK via Gradle with the steps below.
 
 **SDK Version:** `v3.11.6`
 
-1. Add the JitPack repository to your project level `android/build.gradle.kts`.
-   **JITPACK_TOKEN** is a token that PoiLabs will provide for you; it allows you
-   to download the SDK. Read it from `local.properties` (git-ignored) instead of
-   committing it:
+1. Add jitpack dependency to your project level `android/build.gradle.kts` with
+   your token. **JITPACK_TOKEN** is a token that PoiLabs will provide for you;
+   it allows you to download our SDK.
 
 ```kotlin
-// android/build.gradle.kts
-val jitpackToken: String = run {
-    val props = java.util.Properties()
-    val file = rootProject.file("local.properties")
-    if (file.exists()) file.inputStream().use { props.load(it) }
-    props.getProperty("jitpackToken") ?: ""
-}
-
 allprojects {
     repositories {
         google()
@@ -275,18 +226,11 @@ allprojects {
         maven {
             url = uri("https://jitpack.io")
             credentials {
-                username = jitpackToken
+                username = "JITPACK_TOKEN"
             }
         }
     }
 }
-```
-
-Add the token to `android/local.properties` (this file is git-ignored by the
-default Flutter `.gitignore`):
-
-```
-jitpackToken=JITPACK_TOKEN
 ```
 
 2. Add the PoiLabs Analysis SDK dependency to your app level
@@ -321,50 +265,13 @@ Register your custom Application class:
 <application android:name=".PoiAnalysisApplication" ...>
 ```
 
-### CREDENTIALS (keep them out of source control)
-
-Do **not** hard-code your application id / secret in the Application class.
-Add them to `android/local.properties` (git-ignored):
-
-```
-poiAppId=YOUR_APPLICATION_ID
-poiAppSecret=YOUR_APPLICATION_SECRET
-poiUniqueId=YOUR_UNIQUE_ID
-```
-
-Expose them as `BuildConfig` fields in `android/app/build.gradle.kts`:
-
-```kotlin
-import java.util.Properties
-
-val localProperties = Properties().apply {
-    val file = rootProject.file("local.properties")
-    if (file.exists()) file.inputStream().use { load(it) }
-}
-
-android {
-    buildFeatures {
-        buildConfig = true
-    }
-
-    defaultConfig {
-        // ...
-        multiDexEnabled = true
-
-        buildConfigField("String", "POI_APP_ID", "\"${localProperties.getProperty("poiAppId", "")}\"")
-        buildConfigField("String", "POI_APP_SECRET", "\"${localProperties.getProperty("poiAppSecret", "")}\"")
-        buildConfigField("String", "POI_UNIQUE_ID", "\"${localProperties.getProperty("poiUniqueId", "")}\"")
-    }
-}
-```
-
 ### USAGE
 
 #### PoiAnalysisApplication.kt
 
 Initialize the SDK in your Application class. The first access to
-`PoiAnalysis.getInstance()` must happen in `Application.onCreate()`. Credentials
-come from `BuildConfig`, not from literals in the file:
+`PoiAnalysis.getInstance()` must happen in `Application.onCreate()`. Pass your
+Poilabs credentials (hard-coded, `BuildConfig`, remote config, etc.):
 
 ```kotlin
 class PoiAnalysisApplication : Application() {
@@ -373,9 +280,9 @@ class PoiAnalysisApplication : Application() {
         super.onCreate()
 
         val config = PoiAnalysisConfig(
-            BuildConfig.POI_APP_ID,
-            BuildConfig.POI_APP_SECRET,
-            BuildConfig.POI_UNIQUE_ID,
+            "YOUR_APPLICATION_ID",
+            "YOUR_APPLICATION_SECRET",
+            "YOUR_UNIQUE_ID",
         )
         config.setEnabled(true)
         config.setOpenSystemBluetooth(false)
@@ -671,7 +578,8 @@ Stop scanning:
 await _methodChannel.invokeMethod('stopScan');
 ```
 
-> **Reference app.** This repository also contains a small layered example
-> (`lib/core/platform` for the channel layer and `lib/features/analysis` for the
-> data / domain / presentation layers) that wraps the calls above behind a typed
-> API. Use it as a starting point for production integrations.
+> **Reference app.** This repository contains a working sample under
+> `lib/core/platform` and `lib/features/analysis`. Credentials and the JitPack
+> token in that sample are loaded from local config files so they are not
+> committed to this repo; use the same approach or hard-code values in your own
+> project as you prefer.
