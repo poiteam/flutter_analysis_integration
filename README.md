@@ -439,6 +439,17 @@ Stop scanning:
 await _methodChannel.invokeMethod('stopScan');
 ```
 
+#### Setting UNIQUE_ID dynamically
+
+By default the sample reads `UNIQUE_ID` from a build-time value (`POIUniqueId` in iOS `Info.plist`, `POI_UNIQUE_ID` in Android `BuildConfig`). To set it at runtime from Dart — e.g. after the user logs in — call `updateUniqueId` before `startScan`:
+
+```dart
+await _methodChannel.invokeMethod('updateUniqueId', {'uniqueId': dynamicUniqueId});
+await _methodChannel.invokeMethod('startScan');
+```
+
+On Android this calls `PoiAnalysis.getInstance().updateUniqueId(...)`; on iOS it sets `PLAnalysisSettings.sharedInstance().analysisUniqueIdentifier` and re-runs configuration if a scan is already active.
+
 Listen for node ids:
 
 ```dart

@@ -33,6 +33,19 @@ class MainActivity : FlutterActivity(), PoiResponseCallback {
                     requestRuntimePermissions()
                     result.success(true)
                 }
+                "updateUniqueId" -> {
+                    val uniqueId = call.argument<String>("uniqueId")
+                    if (uniqueId.isNullOrEmpty()) {
+                        result.error(
+                            "INVALID_ARGUMENT",
+                            "uniqueId is required",
+                            null,
+                        )
+                    } else {
+                        PoiAnalysis.getInstance().updateUniqueId(uniqueId)
+                        result.success(true)
+                    }
+                }
                 "startScan" -> {
                     startScan()
                     result.success(true)

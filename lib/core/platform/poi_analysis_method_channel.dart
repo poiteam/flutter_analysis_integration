@@ -40,6 +40,14 @@ class PoiAnalysisMethodChannel implements PoiAnalysisPlatform {
   }
 
   @override
+  Future<void> updateUniqueId(String uniqueId) {
+    return _methodChannel.invokeMethod<void>(
+      'updateUniqueId',
+      {'uniqueId': uniqueId},
+    );
+  }
+
+  @override
   Future<void> startScan() {
     return _methodChannel.invokeMethod<void>('startScan');
   }

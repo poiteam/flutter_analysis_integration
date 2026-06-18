@@ -20,8 +20,15 @@ private let eventChannelName = "com.poilabs.analysis/poi_events"
     Bundle.main.object(forInfoDictionaryKey: "POIAppSecret") as? String ?? ""
   }
 
+  // Runtime override set from Flutter via `updateUniqueId`.
+  // Falls back to the `POIUniqueId` Info.plist value when not set.
+  private var uniqueIdOverride: String?
+
   private var uniqueId: String {
-    Bundle.main.object(forInfoDictionaryKey: "POIUniqueId") as? String ?? ""
+    if let uniqueIdOverride, !uniqueIdOverride.isEmpty {
+      return uniqueIdOverride
+    }
+    return Bundle.main.object(forInfoDictionaryKey: "POIUniqueId") as? String ?? ""
   }
 
   override func application(
@@ -64,6 +71,22 @@ private let eventChannelName = "com.poilabs.analysis/poi_events"
         result("ios")
       case "requestPermissions":
         self.requestLocationPermissions()
+        result(true)
+      case "updateUniqueId":
+        guard
+          let args = call.arguments as? [String: Any],
+          let uniqueId = args["uniqueId"] as? String,
+          !uniqueId.isEmpty
+        else {
+          result(FlutterError(code: "INVALID_ARGUMENT", message: "uniqueId is required", details: nil))
+          return
+        }
+        self.uniqueIdOverride = uniqueId
+        PLAnalysisSettings.sharedInstance()?.analysisUniqueIdentifier = uniqueId
+        // Re-run configuration so the new id takes effect if already monitoring.
+        if self.isMonitoring {
+          self.startMonitoring()
+        }
         result(true)
       case "startScan":
         self.startMonitoring()

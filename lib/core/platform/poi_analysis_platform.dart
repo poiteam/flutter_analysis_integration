@@ -7,6 +7,8 @@ abstract class PoiAnalysisPlatform {
 
   Future<void> requestPermissions();
 
+  Future<void> updateUniqueId(String uniqueId);
+
   Future<void> startScan();
 
   Future<void> stopScan();

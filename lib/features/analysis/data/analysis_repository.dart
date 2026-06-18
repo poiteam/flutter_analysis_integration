@@ -14,6 +14,9 @@ class AnalysisRepository {
 
   Future<void> requestPermissions() => _platform.requestPermissions();
 
+  Future<void> updateUniqueId(String uniqueId) =>
+      _platform.updateUniqueId(uniqueId);
+
   Future<void> startScan() => _platform.startScan();
 
   Future<void> stopScan() => _platform.stopScan();
