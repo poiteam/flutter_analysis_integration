@@ -90,6 +90,7 @@ class MainActivity : FlutterActivity(), PoiResponseCallback {
             REQUEST_BACKGROUND_LOCATION,
             REQUEST_COARSE_LOCATION,
             REQUEST_BLUETOOTH_PERMISSION,
+            REQUEST_NOTIFICATION_PERMISSION,
             -> {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     requestRuntimePermissions()
@@ -152,7 +153,10 @@ class MainActivity : FlutterActivity(), PoiResponseCallback {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 requestBluetoothPermissionsIfNeeded()
+                return
             }
+
+            requestNotificationPermissionIfNeeded()
         } else if (
             ActivityCompat.checkSelfPermission(
                 this,
@@ -164,11 +168,15 @@ class MainActivity : FlutterActivity(), PoiResponseCallback {
                 arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
                 REQUEST_COARSE_LOCATION,
             )
+            return
         }
+
+        requestNotificationPermissionIfNeeded()
     }
 
     private fun requestBluetoothPermissionsIfNeeded() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            requestNotificationPermissionIfNeeded()
             return
         }
 
@@ -185,6 +193,28 @@ class MainActivity : FlutterActivity(), PoiResponseCallback {
                     Manifest.permission.BLUETOOTH_SCAN,
                 ),
                 REQUEST_BLUETOOTH_PERMISSION,
+            )
+            return
+        }
+
+        requestNotificationPermissionIfNeeded()
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return
+        }
+
+        val hasPermission = ActivityCompat.checkSelfPermission(
+            this,
+            Manifest.permission.POST_NOTIFICATIONS,
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!hasPermission) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                REQUEST_NOTIFICATION_PERMISSION,
             )
         }
     }
@@ -230,5 +260,6 @@ class MainActivity : FlutterActivity(), PoiResponseCallback {
         private const val REQUEST_BACKGROUND_LOCATION = 57
         private const val REQUEST_COARSE_LOCATION = 58
         private const val REQUEST_BLUETOOTH_PERMISSION = 59
+        private const val REQUEST_NOTIFICATION_PERMISSION = 60
     }
 }
