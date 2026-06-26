@@ -10,6 +10,8 @@ class AnalysisRepository {
 
   Future<String> getPlatform() => _platform.getPlatform();
 
+  Future<String> getUniqueId() => _platform.getUniqueId();
+
   Future<String> getSdkVersion() => _platform.getSdkVersion();
 
   Future<void> requestPermissions() => _platform.requestPermissions();

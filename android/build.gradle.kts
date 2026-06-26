@@ -1,11 +1,4 @@
-val jitpackToken: String = run {
-    val props = java.util.Properties()
-    val file = rootProject.file("local.properties")
-    if (file.exists()) {
-        file.inputStream().use { props.load(it) }
-    }
-    props.getProperty("jitpackToken") ?: ""
-}
+val jitpackToken: String = "YOUR_PLACE_JITPACK_TOKEN"
 
 allprojects {
     repositories {

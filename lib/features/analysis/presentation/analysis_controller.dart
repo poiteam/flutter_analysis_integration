@@ -12,6 +12,7 @@ class AnalysisController {
   late final StreamSubscription<AnalysisEvent> _subscription;
 
   String platform = 'loading...';
+  String uniqueId = 'loading...';
   String sdkVersion = 'loading...';
   bool isScanning = false;
   String? statusMessage;
@@ -23,7 +24,9 @@ class AnalysisController {
   Stream<void> get changes => _changes.stream;
 
   Future<void> initialize() async {
+    // Pull diagnostic metadata first so UI can show platform/id/version immediately.
     platform = await _repository.getPlatform();
+    uniqueId = await _repository.getUniqueId();
     sdkVersion = await _repository.getSdkVersion();
     await _repository.requestPermissions();
     _notify();

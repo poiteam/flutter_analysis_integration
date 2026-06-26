@@ -11,6 +11,7 @@ private let eventChannelName = "com.poilabs.analysis/poi_events"
   private var eventSink: FlutterEventSink?
   private var isMonitoring = false
   private let locationManager = CLLocationManager()
+  private let generatedUniqueIdKey = "poilabs.generatedUniqueId"
 
   private var appId: String {
     Bundle.main.object(forInfoDictionaryKey: "POIAppId") as? String ?? ""
@@ -23,12 +24,27 @@ private let eventChannelName = "com.poilabs.analysis/poi_events"
   // Runtime override set from Flutter via `updateUniqueId`.
   // Falls back to the `POIUniqueId` Info.plist value when not set.
   private var uniqueIdOverride: String?
+  private lazy var deviceUniqueId: String = {
+    // Persist once so backend sees a stable identifier across launches.
+    if let saved = UserDefaults.standard.string(forKey: generatedUniqueIdKey), !saved.isEmpty {
+      return saved
+    }
+    let value = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
+    UserDefaults.standard.set(value, forKey: generatedUniqueIdKey)
+    return value
+  }()
 
   private var uniqueId: String {
     if let uniqueIdOverride, !uniqueIdOverride.isEmpty {
       return uniqueIdOverride
     }
-    return Bundle.main.object(forInfoDictionaryKey: "POIUniqueId") as? String ?? ""
+    let plistValue = (Bundle.main.object(forInfoDictionaryKey: "POIUniqueId") as? String)?
+      .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    if !plistValue.isEmpty, !plistValue.hasPrefix("$(") {
+      return plistValue
+    }
+    // Build-time value is optional; fallback keeps SDK config valid.
+    return deviceUniqueId
   }
 
   override func application(
@@ -36,6 +52,7 @@ private let eventChannelName = "com.poilabs.analysis/poi_events"
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
+    locationManager.delegate = self
 
     if launchOptions?[UIApplication.LaunchOptionsKey.location] != nil,
        application.applicationState == .background {
@@ -69,6 +86,8 @@ private let eventChannelName = "com.poilabs.analysis/poi_events"
       switch call.method {
       case "getPlatform":
         result("ios")
+      case "getUniqueId":
+        result(self.uniqueId)
       case "requestPermissions":
         self.requestLocationPermissions()
         result(true)
@@ -110,8 +129,23 @@ private let eventChannelName = "com.poilabs.analysis/poi_events"
   }
 
   private func requestLocationPermissions() {
-    locationManager.requestWhenInUseAuthorization()
-    locationManager.requestAlwaysAuthorization()
+    if #available(iOS 14.0, *) {
+      handleAuthorizationStatus(locationManager.authorizationStatus)
+    } else {
+      handleAuthorizationStatus(CLLocationManager.authorizationStatus())
+    }
+  }
+
+  private func handleAuthorizationStatus(_ status: CLAuthorizationStatus) {
+    // iOS background permission flow is 2-step: WhenInUse first, Always second.
+    switch status {
+    case .notDetermined:
+      locationManager.requestWhenInUseAuthorization()
+    case .authorizedWhenInUse:
+      locationManager.requestAlwaysAuthorization()
+    default:
+      break
+    }
   }
 
   private func startMonitoring() {
@@ -221,5 +255,17 @@ extension AppDelegate: FlutterStreamHandler {
   func onCancel(withArguments arguments: Any?) -> FlutterError? {
     eventSink = nil
     return nil
+  }
+}
+
+extension AppDelegate: CLLocationManagerDelegate {
+  func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+    if #available(iOS 14.0, *) {
+      handleAuthorizationStatus(manager.authorizationStatus)
+    }
+  }
+
+  func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+    handleAuthorizationStatus(status)
   }
 }

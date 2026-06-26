@@ -63,6 +63,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
             children: [
               _InfoCard(
                 platform: _controller.platform,
+                uniqueId: _controller.uniqueId,
                 sdkVersion: _controller.sdkVersion,
                 statusMessage: _controller.statusMessage,
                 lastError: _controller.lastError,
@@ -122,6 +123,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
 class _InfoCard extends StatelessWidget {
   const _InfoCard({
     required this.platform,
+    required this.uniqueId,
     required this.sdkVersion,
     required this.statusMessage,
     required this.lastError,
@@ -129,6 +131,7 @@ class _InfoCard extends StatelessWidget {
   });
 
   final String platform;
+  final String uniqueId;
   final String sdkVersion;
   final String? statusMessage;
   final String? lastError;
@@ -143,6 +146,8 @@ class _InfoCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Platform: $platform'),
+            const SizedBox(height: 4),
+            Text('Unique ID: $uniqueId'),
             const SizedBox(height: 4),
             Text('SDK Version: $sdkVersion'),
             const SizedBox(height: 8),

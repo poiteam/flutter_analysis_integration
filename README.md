@@ -106,7 +106,7 @@ Register **MethodChannel** and **EventChannel** in `AppDelegate.swift`, call the
 private let methodChannelName = "com.poilabs.analysis/poi_analysis"
 private let eventChannelName = "com.poilabs.analysis/poi_events"
 
-// MethodChannel: requestPermissions, startScan, stopScan
+// MethodChannel: requestPermissions, getUniqueId, updateUniqueId, startScan, stopScan
 // EventChannel: forward nodeIds / errors from PLAnalysisManagerDelegate
 ```
 
@@ -373,6 +373,7 @@ MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.poilabs.analysis/
     .setMethodCallHandler { call, result ->
         when (call.method) {
             "requestPermissions" -> { /* ... */ result.success(true) }
+            "getUniqueId" -> { /* return current unique id */ result.success("...") }
             "startScan" -> { /* PoiAnalysis.getInstance().startScan(...) */ result.success(true) }
             "stopScan" -> { /* PoiAnalysis.getInstance().stopScan() */ result.success(true) }
             else -> result.notImplemented()
@@ -439,6 +440,12 @@ Stop scanning:
 await _methodChannel.invokeMethod('stopScan');
 ```
 
+Read current unique id from native:
+
+```dart
+final uniqueId = await _methodChannel.invokeMethod<String>('getUniqueId');
+```
+
 #### Setting UNIQUE_ID dynamically
 
 By default the sample reads `UNIQUE_ID` from a build-time value (`POIUniqueId` in iOS `Info.plist`, `POI_UNIQUE_ID` in Android `BuildConfig`). To set it at runtime from Dart — e.g. after the user logs in — call `updateUniqueId` before `startScan`:
@@ -449,6 +456,7 @@ await _methodChannel.invokeMethod('startScan');
 ```
 
 On Android this calls `PoiAnalysis.getInstance().updateUniqueId(...)`; on iOS it sets `PLAnalysisSettings.sharedInstance().analysisUniqueIdentifier` and re-runs configuration if a scan is already active.
+If no build-time `UNIQUE_ID` is provided, both platforms apply a fallback (device-based id) so SDK initialization can continue.
 
 Listen for node ids:
 

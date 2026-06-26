@@ -21,6 +21,10 @@ class MainActivity : FlutterActivity(), PoiResponseCallback {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
+        // Guard every SDK access: getInstance() throws if init failed in Application.
+        if (!isSdkReady()) {
+            return
+        }
         PoiAnalysis.getInstance().setPoiResponseListener(this)
 
         MethodChannel(
@@ -29,6 +33,9 @@ class MainActivity : FlutterActivity(), PoiResponseCallback {
         ).setMethodCallHandler { call, result ->
             when (call.method) {
                 "getPlatform" -> result.success("android")
+                "getUniqueId" -> {
+                    result.success((application as? PoiAnalysisApplication)?.currentUniqueId ?: "")
+                }
                 "requestPermissions" -> {
                     requestRuntimePermissions()
                     result.success(true)
@@ -42,8 +49,17 @@ class MainActivity : FlutterActivity(), PoiResponseCallback {
                             null,
                         )
                     } else {
-                        PoiAnalysis.getInstance().updateUniqueId(uniqueId)
-                        result.success(true)
+                        if (!isSdkReady()) {
+                            result.error(
+                                "SDK_NOT_READY",
+                                "PoiAnalysis SDK is not initialized",
+                                null,
+                            )
+                        } else {
+                            PoiAnalysis.getInstance().updateUniqueId(uniqueId)
+                            (application as? PoiAnalysisApplication)?.updateCurrentUniqueId(uniqueId)
+                            result.success(true)
+                        }
                     }
                 }
                 "startScan" -> {
@@ -220,8 +236,18 @@ class MainActivity : FlutterActivity(), PoiResponseCallback {
     }
 
     private fun startScan() {
+        if (!isSdkReady()) {
+            eventSink?.success(
+                mapOf(
+                    "type" to "error",
+                    "message" to "PoiAnalysis SDK is not initialized",
+                ),
+            )
+            return
+        }
         try {
             PoiAnalysis.getInstance().enable()
+            // Mirror SDK sample: short delay before scanning after enable/permission flow.
             mainHandler.postDelayed({
                 PoiAnalysis.getInstance().startScan(applicationContext)
                 eventSink?.success(
@@ -242,6 +268,9 @@ class MainActivity : FlutterActivity(), PoiResponseCallback {
     }
 
     private fun stopScan() {
+        if (!isSdkReady()) {
+            return
+        }
         PoiAnalysis.getInstance().stopScan()
         eventSink?.success(
             mapOf(
@@ -249,6 +278,11 @@ class MainActivity : FlutterActivity(), PoiResponseCallback {
                 "message" to "Scan stopped",
             ),
         )
+    }
+
+    private fun isSdkReady(): Boolean {
+        // Single source of truth for SDK init state set in Application.onCreate.
+        return (application as? PoiAnalysisApplication)?.sdkInitialized == true
     }
 
     companion object {

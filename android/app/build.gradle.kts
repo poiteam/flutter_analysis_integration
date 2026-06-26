@@ -1,16 +1,7 @@
-import java.util.Properties
-
 plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
-}
-
-val localProperties = Properties().apply {
-    val file = rootProject.file("local.properties")
-    if (file.exists()) {
-        file.inputStream().use { load(it) }
-    }
 }
 
 android {
@@ -42,17 +33,17 @@ android {
         buildConfigField(
             "String",
             "POI_APP_ID",
-            "\"${localProperties.getProperty("poiAppId", "")}\"",
+            "\"YOUR_PLACE_APP_ID\"",
         )
         buildConfigField(
             "String",
             "POI_APP_SECRET",
-            "\"${localProperties.getProperty("poiAppSecret", "")}\"",
+            "\"YOUR_PLACE_APP_SECRET\"",
         )
         buildConfigField(
             "String",
             "POI_UNIQUE_ID",
-            "\"${localProperties.getProperty("poiUniqueId", "")}\"",
+            "\"\"",
         )
     }
 

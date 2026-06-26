@@ -29,6 +29,13 @@ class PoiAnalysisMethodChannel implements PoiAnalysisPlatform {
   }
 
   @override
+  Future<String> getUniqueId() async {
+    // Native side resolves runtime override or device/build-time fallback.
+    final uniqueId = await _methodChannel.invokeMethod<String>('getUniqueId');
+    return uniqueId ?? '';
+  }
+
+  @override
   Future<String> getSdkVersion() async {
     final version = await _methodChannel.invokeMethod<String>('getSdkVersion');
     return version ?? 'unknown';
