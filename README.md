@@ -51,13 +51,25 @@ You should add "Location updates" and "Uses Bluetooth LE accessories" Background
 
 ### USAGE
 
-You should import framework in your `AppDelegate.swift`:
+You should import framework in your `AppDelegate.swift` (and `SceneDelegate.swift` for UIScene lifecycle):
 
 ```swift
 import PoilabsAnalysis
 ```
 
-In `applicationDidBecomeActive:` method you should activate the framework:
+#### Current (recommended): UIScene lifecycle (iOS 13+ and required for iOS 27 SDK)
+
+In this repository, the active integration uses `AppDelegate + SceneDelegate`.
+
+Foreground activation is handled in `SceneDelegate`:
+
+```swift
+override func sceneDidBecomeActive(_ scene: UIScene) {
+    (UIApplication.shared.delegate as? AppDelegate)?.handleSceneDidBecomeActive()
+}
+```
+
+And `handleSceneDidBecomeActive` calls standard monitoring startup:
 
 ```swift
 PLAnalysisSettings.sharedInstance().applicationId = APPLICATION_ID
@@ -78,17 +90,31 @@ PLConfigManager.sharedInstance().getReadyForTracking(completionHandler: { error 
 })
 ```
 
-#### For background tracking
-
-In `didFinishLaunchingWithOptions:` method you should activate the framework:
+For kill/background relaunch handling, do it in `didFinishLaunchingWithOptions` by checking process state (`.background`) and start suspended monitoring synchronously:
 
 ```swift
-if launchOptions?[UIApplication.LaunchOptionsKey.location] != nil {
-    if application.applicationState == UIApplication.State.background {
-        PLSuspendedAnalysisManager.sharedInstance()?.startBeaconMonitoring()
-    }
+if application.applicationState == .background {
+    PLSuspendedAnalysisManager.sharedInstance()?.delegate = self
+    PLSuspendedAnalysisManager.sharedInstance()?.startBeaconMonitoring()
 }
 ```
+
+> Why not `launchOptions[.location]`?
+> In scene-based apps, AppDelegate `launchOptions` is no longer populated for these events.  
+> Using process state + synchronous suspended start prevents missed region callbacks in kill mode.
+
+#### Legacy (AppDelegate-only) reference
+
+If your app does **not** support scenes (older architecture), foreground startup is commonly done in `applicationDidBecomeActive`, and kill-mode checks often used `launchOptions[.location]`:
+
+```swift
+if launchOptions?[UIApplication.LaunchOptionsKey.location] != nil,
+   application.applicationState == .background {
+    PLSuspendedAnalysisManager.sharedInstance()?.startBeaconMonitoring()
+}
+```
+
+This legacy approach is kept here for migration reference only. For new integrations, prefer the UIScene flow above.
 
 #### Close All Actions
 
@@ -100,7 +126,9 @@ PLAnalysisSettings.sharedInstance()?.closeAllActions()
 
 #### Flutter bridge
 
-Register **MethodChannel** and **EventChannel** in `AppDelegate.swift`, call the SDK methods above from the channel handler, and forward `PLAnalysisManagerDelegate` callbacks to Flutter:
+Register **MethodChannel** and **EventChannel** in `AppDelegate.swift`, call the SDK methods above from the channel handler, and forward `PLAnalysisManagerDelegate` callbacks to Flutter.
+
+For UIScene projects, initialize channel wiring from `SceneDelegate.scene(_:willConnectTo:options:)` after `FlutterViewController` is available (this repository uses `configureChannelsIfNeeded(...)` to avoid duplicate setup):
 
 ```swift
 private let methodChannelName = "com.poilabs.analysis/poi_analysis"
@@ -178,7 +206,9 @@ Background monitoring means scaning beacon when application is killed.
 
 Before start to test please make sure **always location permission** is given.
 
-To activate background mode, you should kill application and lock the screen. After you show the lock screen or unlock your iPhone, background monitoring will start if you integrate it, like in the section **USAGE / For background tracking**.
+To validate kill/background mode, kill the app and trigger a real region/beacon transition (enter/exit monitored area). iOS relaunches the app in background for that event; it is not a continuously running process.
+
+For UIScene integration in this repo, background relaunch handling follows the **USAGE / Current (recommended): UIScene lifecycle** section.
 
 For getting response, you have to be **nearby of a beacon** with data which are shared by PoiLabs.
 

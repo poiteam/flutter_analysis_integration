@@ -10,6 +10,7 @@ private let eventChannelName = "com.poilabs.analysis/poi_events"
 @objc class AppDelegate: FlutterAppDelegate, PLAnalysisManagerDelegate {
   private var eventSink: FlutterEventSink?
   private var isMonitoring = false
+  private var channelsConfigured = false
   private let locationManager = CLLocationManager()
   private let generatedUniqueIdKey = "poilabs.generatedUniqueId"
 
@@ -53,14 +54,21 @@ private let eventChannelName = "com.poilabs.analysis/poi_events"
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
     locationManager.delegate = self
+    applyAnalysisSettings()
 
-    if launchOptions?[UIApplication.LaunchOptionsKey.location] != nil,
-       application.applicationState == .background {
+    // UIScene apps do not receive location launch info in AppDelegate launchOptions anymore.
+    // For kill/background relaunches we rely on process state, then start suspended monitoring
+    // synchronously before didFinishLaunching returns so queued region events are not missed.
+    if application.applicationState == .background {
+      #if DEBUG
+      NSLog("PLAnalysisSdk kill-launch: background relaunch detected, starting suspended monitoring")
+      #endif
+      PLSuspendedAnalysisManager.sharedInstance()?.delegate = self
       PLSuspendedAnalysisManager.sharedInstance()?.startBeaconMonitoring()
     }
 
     if let controller = window?.rootViewController as? FlutterViewController {
-      setupChannels(controller: controller)
+      configureChannelsIfNeeded(controller: controller)
     }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
@@ -68,10 +76,18 @@ private let eventChannelName = "com.poilabs.analysis/poi_events"
 
   override func applicationDidBecomeActive(_ application: UIApplication) {
     super.applicationDidBecomeActive(application)
+    // In UIScene lifecycle, foreground transitions are handled by SceneDelegate.
+    // Keep AppDelegate active hook only for legacy/non-scene code paths.
+    if #available(iOS 13.0, *), !application.connectedScenes.isEmpty {
+      return
+    }
     startMonitoring()
   }
 
-  private func setupChannels(controller: FlutterViewController) {
+  func configureChannelsIfNeeded(controller: FlutterViewController) {
+    guard !channelsConfigured else { return }
+    channelsConfigured = true
+
     let methodChannel = FlutterMethodChannel(
       name: methodChannelName,
       binaryMessenger: controller.binaryMessenger
@@ -128,6 +144,10 @@ private let eventChannelName = "com.poilabs.analysis/poi_events"
     eventChannel.setStreamHandler(self)
   }
 
+  func handleSceneDidBecomeActive() {
+    startMonitoring()
+  }
+
   private func requestLocationPermissions() {
     if #available(iOS 14.0, *) {
       handleAuthorizationStatus(locationManager.authorizationStatus)
@@ -149,10 +169,7 @@ private let eventChannelName = "com.poilabs.analysis/poi_events"
   }
 
   private func startMonitoring() {
-    let settings = PLAnalysisSettings.sharedInstance()
-    settings?.applicationId = appId
-    settings?.applicationSecret = applicationSecret
-    settings?.analysisUniqueIdentifier = uniqueId
+    applyAnalysisSettings()
 
     PLConfigManager.sharedInstance().getReadyForTracking(completionHandler: { [weak self] error in
       guard let self else { return }
@@ -176,6 +193,13 @@ private let eventChannelName = "com.poilabs.analysis/poi_events"
         ])
       }
     })
+  }
+
+  private func applyAnalysisSettings() {
+    let settings = PLAnalysisSettings.sharedInstance()
+    settings?.applicationId = appId
+    settings?.applicationSecret = applicationSecret
+    settings?.analysisUniqueIdentifier = uniqueId
   }
 
   private func stopMonitoring() {
