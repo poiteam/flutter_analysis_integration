@@ -59,5 +59,5 @@ flutter {
 }
 
 dependencies {
-    implementation("com.github.poiteam:Android-Analysis-SDK:v3.11.6")
+    implementation("com.github.poiteam:Android-Analysis-SDK:v3.12.0")
 }

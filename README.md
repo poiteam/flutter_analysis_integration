@@ -6,27 +6,36 @@ PoiLabs Analysis SDK is a data analysis library. It provides data for analysing 
 - [Android](#android)
 - [Flutter](#flutter)
 
+| | iOS | Android |
+|---|---|---|
+| PoilabsAnalysis | 3.8.29 | v3.12.0 |
+| Minimum OS | iOS 12.0 | Android 5.0 (API 21) |
+| Installation | Swift Package Manager | Gradle (JitPack) |
+
 ---
 
 ## iOS
 
 ### INSTALLATION
 
-#### CocoaPods
+PoilabsAnalysis is distributed with **Swift Package Manager (SPM)**. CocoaPods is no longer supported; new versions are not published there.
 
-To integrate PoilabsAnalysis into your Flutter iOS project using CocoaPods, specify it in your `Podfile`:
+#### Swift Package Manager
 
-```ruby
-pod 'PoilabsAnalysis', '3.8.28'
-```
+A Flutter app is a normal Xcode project on the iOS side, so you add the package to the **Runner** target:
 
-**SDK Version:** `3.8.28`
+1. Open `ios/Runner.xcworkspace` in Xcode.
+2. Select **File > Add Package Dependencies...**
+3. Enter the repository URL: `https://github.com/poiteam/ios-analysis-pod.git`
+4. Choose **Exact Version** `3.8.29` and add the **PoilabsAnalysis** product to the **Runner** target.
 
-Then run:
+**SDK Version:** `3.8.29` — requires iOS 12.0 or later.
 
-```bash
-cd ios && pod install
-```
+Flutter's own `Podfile` stays as it is; Flutter still uses it for your other plugins.
+
+#### Migrating from CocoaPods
+
+Remove `pod 'PoilabsAnalysis'` from `ios/Podfile`, run `pod install` in the `ios` folder, then add the package as described above. Do not keep the SDK in your `Podfile` while it is added with SPM; the same framework would be embedded twice.
 
 #### Manually
 
@@ -237,7 +246,7 @@ If you get these log, background monitoring is successfully integrated.
 
 You can download our SDK via Gradle with following below steps.
 
-**SDK Version:** `v3.11.6`
+**SDK Version:** `v3.12.0`
 
 1. Add jitpack dependency to your project level `build.gradle.kts` file with their tokens.  
    **JITPACK_TOKEN** is a token that PoiLabs will provide for you it will allow you to download our sdk.
@@ -259,7 +268,7 @@ allprojects {
 
 ```kotlin
 dependencies {
-    implementation("com.github.poiteam:Android-Analysis-SDK:v3.11.6")
+    implementation("com.github.poiteam:Android-Analysis-SDK:v3.12.0")
 }
 ```
 
@@ -270,7 +279,7 @@ dependencies {
 
 | Supported Minimum Android |
 | --- |
-| Android 4.3 (API level 18) |
+| Android 5.0 (API level 21) |
 
 ### PRE-REQUIREMENTS
 
@@ -299,6 +308,10 @@ Register your custom Application class:
 2. Request runtime permissions before starting scan. See `MainActivity.kt` in this repository for a sample permission flow.
 
 **Note:** It does not affect the SDK how you request runtime permissions. The samples in documentation are just samples. Feel free to get permissions however you want.
+
+#### PoiPanel Geofence Mode (v3.12.0+)
+
+Geofences are managed in PoiPanel; no code change is required in your app. The SDK always runs regular beacon scanning while `startScan()` is active, and promotes it to a foreground service inside a configured geofence or when a matching beacon is detected. For this, `ACCESS_FINE_LOCATION` and `ACCESS_BACKGROUND_LOCATION` must be granted (without background location, geofence transitions are only delivered while the app is in the foreground), the foreground service configuration must be enabled, and the device needs Google Play Services. Without these, regular scanning still works.
 
 ### USAGE
 
